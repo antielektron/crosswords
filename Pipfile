@@ -9,6 +9,8 @@ numpy = "*"
 pylint = "*"
 flake8 = "*"
 rope = "*"
+pandas = "*"
+tqdm = "*"
 
 [dev-packages]
 

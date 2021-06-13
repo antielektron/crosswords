@@ -1,0 +1,4 @@
+english.words filter=lfs diff=lfs merge=lfs -text
+german.words filter=lfs diff=lfs merge=lfs -text
+english.json filter=lfs diff=lfs merge=lfs -text
+german.json filter=lfs diff=lfs merge=lfs -text
