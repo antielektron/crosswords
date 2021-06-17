@@ -204,7 +204,7 @@ class Grid(object):
         for i, cell in enumerate(cells_to_reveal):
             status_update.append({
                 'x': x,
-                'y': y + i,
+                'y': y_start + i,
                 'revealed': cell.get_content()
             })
             cell.reveal()
