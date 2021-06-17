@@ -59,10 +59,11 @@ class JsonWebsocketConnection(object):
 
 
 class JsonWebsocketServer(object):
-    def __init__(self, handler_class: JsonWebsocketConnection, host:str = 'localhost', port:int = 8765):
+    def __init__(self, handler_class: JsonWebsocketConnection, host:str = 'localhost', port:int = 8765, ssl_context = None):
         self._host = host
         self._port = port
         self._handler_class = handler_class
+        self._ssl_context = ssl_context
 
     def run(self):
         async def main(websocket: websockets.WebSocketServerProtocol,
@@ -71,8 +72,11 @@ class JsonWebsocketServer(object):
             connection = self._handler_class(websocket)
 
             await connection.run()
-        
-        start_server = websockets.serve(main, self._host, self._port)
+
+        if (self._ssl_context is not None):
+            start_server = websockets.serve(main, self._host, self._port, ssl=self._ssl_context)
+        else:
+            start_server = websockets.serve(main, self._host, self._port)
 
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
