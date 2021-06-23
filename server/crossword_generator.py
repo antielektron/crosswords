@@ -279,7 +279,7 @@ def create_word_grid(w: int, h: int, lang_code: str = "en", target_density=0.5):
         for char in word:
             if char not in locations_cpy or len(locations_cpy[char]) == 0:
                 # next try:
-                get_solution_word(min_length=min_length, max_length=max_length)
+                return get_solution_word(min_length=min_length, max_length=max_length)
 
             location_candidates = locations_cpy[char]
 
