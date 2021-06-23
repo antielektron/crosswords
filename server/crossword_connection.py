@@ -14,7 +14,7 @@ class CrosswordConnection(json_websockets.JsonWebsocketConnection):
 
         self._session = None
 
-    async def send_crossword(self, sessionId: str):
+    async def send_crossword(self, sessionId: str, lang:str = "en"):
         if sessionId not in CrosswordConnection.sessions:
             await self.send_error(msg="unknown session")
             return
@@ -28,7 +28,7 @@ class CrosswordConnection(json_websockets.JsonWebsocketConnection):
             await self.send_error(msg="you are not registered to given session")
             return
 
-        crossword = sess.get_crossword()
+        crossword = sess.get_crossword(lang=lang)
         await self.send({
             'type': 'crossword',
             'crossword': crossword.serialize()
@@ -53,7 +53,7 @@ class CrosswordConnection(json_websockets.JsonWebsocketConnection):
                 'updates': update_message
             })
 
-    async def register(self, sessionId: str = None):
+    async def register(self, sessionId: str = None, lang: str = "en"):
 
         if sessionId is None:
 
@@ -68,7 +68,7 @@ class CrosswordConnection(json_websockets.JsonWebsocketConnection):
             await self.send_error("unknown session id")
 
             # register with new id:
-            await self.register()
+            await self.register(lang=lang)
             return
 
         sess = CrosswordConnection.sessions[sessionId]
@@ -81,7 +81,7 @@ class CrosswordConnection(json_websockets.JsonWebsocketConnection):
             'sessionId': sessionId
         })
 
-        await self.send_crossword(sessionId)
+        await self.send_crossword(sessionId, lang=lang)
 
     async def send_error(self, msg: str):
         await self.send({
@@ -98,9 +98,12 @@ class CrosswordConnection(json_websockets.JsonWebsocketConnection):
 
         if message['type'] == 'register':
             sessionId = None
+            lang = "en"
             if 'sessionId' in message:
                 sessionId = message['sessionId']
-            await self.register(sessionId=sessionId)
+            if "lang" in message:
+                lang = message['lang']
+            await self.register(sessionId=sessionId, lang = lang)
             return
 
         if self._session is None:

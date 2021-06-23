@@ -105,12 +105,13 @@ class LetterField(Field):
 
 
 class Grid(object):
-    def __init__(self, width: int, height: int, lang_code: str, density=0.5):
+    def __init__(self, width: int, height: int, lang_code: str, density=0.55):
         self._width = width
         self._height = height
         self._lang_code = lang_code
         self._density = density
         self._grid = []
+        self._solution_locations = None
         try:
             self._build_grid()
         except Exception as e:
@@ -245,12 +246,21 @@ class Grid(object):
                 'y': y,
                 'user_input': cell.get_user_content()
             }]
-        
+
         return revealed_changes
 
+    def get_solution_locations(self):
+        return self._solution_locations
+
     def _build_grid(self):
-        raw_grid, word_infos = crossword_generator.create_word_grid(
-            self._width - 1, self._height - 1, lang_code="en", target_density=self._density)
+        raw_grid, word_infos, solution_locations = crossword_generator.create_word_grid(
+            self._width - 1, self._height - 1, lang_code=self._lang_code, target_density=self._density)
+
+        self._solution_locations = solution_locations
+        # fix solution locations offsets
+        for i in range(len(self._solution_locations)):
+            self._solution_locations[i][0] += 1
+            self._solution_locations[i][1] += 1
 
         # note: we will append an additional row and column, to have enough space to place hint fields
 
@@ -304,17 +314,18 @@ class Crossword(object):
         return {
             'w': self._width,
             'h': self._height,
-            'grid': self._grid.serialize()
+            'grid': self._grid.serialize(),
+            'solution': self._grid.get_solution_locations()
         }
 
     def user_input(self, x: int, y: int, letter: str) -> list:
         return self._grid.user_input(x=x, y=y, letter=letter)
-    
+
     def get_status(self) -> list:
         return self._grid.get_status()
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    cw = Crossword(15, 15, "en")
+    cw = Crossword(30, 30, "de")
     print(cw.serialize())

@@ -36,13 +36,13 @@ class Session(object):
     def get_datetime_created(self) -> dt.datetime:
         return self.datetime_created
 
-    def create_crossword(self, width: int = 30, height: int = 30):
+    def create_crossword(self, width: int = 20, height: int = 20, lang: str = "en"):
         self.crossword = crossword.Crossword(width=width,
                                              height=height,
-                                             lang_code="en")
+                                             lang_code=lang)
 
-    def get_crossword(self) -> crossword.Crossword:
+    def get_crossword(self, lang: str = "en") -> crossword.Crossword:
         if self.crossword is None:
-            self.create_crossword()
+            self.create_crossword(lang = lang)
         
         return self.crossword
