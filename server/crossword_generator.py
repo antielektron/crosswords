@@ -185,7 +185,7 @@ def create_word_grid(w: int, h: int, lang_code: str = "en", target_density=0.5):
             # check if there is space before and after
             if y - 1 >= 0 and grid[y - 1, x] != " ":
                 return False
-            if y + n < grid.shape[0] - 1 and grid[y+n, x] != " ":
+            if y + n < grid.shape[0] and grid[y+n, x] != " ":
                 return False
 
             if grid.shape[0] - n < y or y < 0:
@@ -214,7 +214,7 @@ def create_word_grid(w: int, h: int, lang_code: str = "en", target_density=0.5):
             # check if there is space before and after
             if x - 1 >= 0 and grid[y, x - 1] != " ":
                 return False
-            if x + n < grid.shape[1] - 1 and grid[y, x + n] != " ":
+            if x + n < grid.shape[1] and grid[y, x + n] != " ":
                 return False
 
             if grid.shape[1] - n < x or x < 0:

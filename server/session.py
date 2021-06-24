@@ -4,10 +4,12 @@ from . import crossword
 
 
 class Session(object):
-    def __init__(self) -> None:
+    def __init__(self, days_to_expire:int = 2) -> None:
         self.crossword = None
         self.datetime_created = dt.datetime.utcnow()
         self.connected_sockets = set()
+        self.last_touched = self.datetime_created
+        self.days_to_expire = 2
     
     def cleanup(self):
         sockets_to_remove = []
@@ -46,3 +48,17 @@ class Session(object):
             self.create_crossword(lang = lang)
         
         return self.crossword
+    
+    def touch(self):
+        self.last_touched = dt.datetime.utcnow()
+    
+    def is_expired(self):
+        self.cleanup()
+        if len(self.connected_sockets) > 0:
+            return False
+        now = dt.datetime.utcnow()
+        if (now - self.last_touched).days > self.days_to_expire:
+            return True
+        
+        return False
+

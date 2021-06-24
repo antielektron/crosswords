@@ -1,6 +1,8 @@
 import logging
 import uuid
 
+import datetime as dt
+
 from . import json_websockets
 from . import session
 
@@ -9,12 +11,27 @@ class CrosswordConnection(json_websockets.JsonWebsocketConnection):
 
     sessions = {}
 
+    last_cleanup = None
+
+    def clean_sessions():
+        now = dt.datetime.utcnow()
+        if CrosswordConnection.last_cleanup is None or (now - CrosswordConnection.last_cleanup).total_seconds() > 3600:
+            CrosswordConnection.last_cleanup = now
+
+            sessions_to_close = []
+            for key, session in CrosswordConnection.sessions.items():
+                if session.is_expired():
+                    sessions_to_close.append(key)
+
+            for key in sessions_to_close:
+                del(CrosswordConnection.sessions[key])
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._session = None
 
-    async def send_crossword(self, sessionId: str, lang:str = "en"):
+    async def send_crossword(self, sessionId: str, lang: str = "en"):
         if sessionId not in CrosswordConnection.sessions:
             await self.send_error(msg="unknown session")
             return
@@ -83,6 +100,9 @@ class CrosswordConnection(json_websockets.JsonWebsocketConnection):
 
         await self.send_crossword(sessionId, lang=lang)
 
+        # clean up old session
+        CrosswordConnection.clean_sessions()
+
     async def send_error(self, msg: str):
         await self.send({
             'type': 'error',
@@ -103,7 +123,7 @@ class CrosswordConnection(json_websockets.JsonWebsocketConnection):
                 sessionId = message['sessionId']
             if "lang" in message:
                 lang = message['lang']
-            await self.register(sessionId=sessionId, lang = lang)
+            await self.register(sessionId=sessionId, lang=lang)
             return
 
         if self._session is None:
