@@ -321,9 +321,9 @@ def create_word_grid(w: int, h: int, lang_code: str = "en", target_density=0.5):
         crossover = get_crossover(normalized_word)
 
         i += 1
-        if i % 100000 == 0:
+        if i % 1000 == 0:
             print(i)
-        if i > 100000:
+        if i > 1200:
             break
 
         if crossover == None:
