@@ -213,7 +213,7 @@ class Grid(object):
         return status_update
 
     def check_and_reveal_word(self, x: int, y: int):
-        grid_update = self.check_and_reveal_horizontal(x, y) + self.check_and_reveal_vertival(x, y)
+        grid_update = self.check_and_reveal_horizontal(x, y) + self.check_and_reveal_vertical(x, y)
 
         # check also the solution locations
         
@@ -266,8 +266,7 @@ class Grid(object):
 
         cell.user_input(letter.lower())
 
-        revealed_changes = self.check_and_reveal_vertical(
-            x, y) + self.check_and_reveal_horizontal(x, y)
+        revealed_changes = self.check_and_reveal_word(x,y)
 
         if len(revealed_changes) == 0:
             return [{
