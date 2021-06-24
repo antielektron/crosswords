@@ -213,7 +213,36 @@ class Grid(object):
         return status_update
 
     def check_and_reveal_word(self, x: int, y: int):
-        return self.check_and_reveal_horizontal(x, y) + self.check_and_reveal_vertival(x, y)
+        grid_update = self.check_and_reveal_horizontal(x, y) + self.check_and_reveal_vertival(x, y)
+
+        # check also the solution locations
+        
+        is_solution_cell = False
+        for location in self._solution_locations:
+            ly = location[0]
+            lx = location[1]
+
+            if lx == x and ly == y:
+                is_solution_cell = True
+            cell = self._grid[ly][lx]
+            if cell.get_user_content() != cell.get_content():
+                # not solved, nothing to do, return only grid update
+                return grid_update
+        
+        if not is_solution_cell:
+            return grid_update
+        
+        solution_updates = []
+        for location in self._solution_locations:
+            ly = location[0]
+            lx = location[1]
+
+            solution_updates.append({
+                'x': lx,
+                'y': ly,
+                'revealed': self._grid[ly][lx].get_content()
+            })
+        return grid_update + solution_updates
 
     def user_input(self, x: int, y: int, letter: str) -> list:
         assert len(letter) <= 1
