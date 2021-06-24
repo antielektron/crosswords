@@ -242,6 +242,7 @@ class Grid(object):
                 'y': ly,
                 'revealed': self._grid[ly][lx].get_content()
             })
+            self._grid[ly][lx].reveal()
         return grid_update + solution_updates
 
     def user_input(self, x: int, y: int, letter: str) -> list:
