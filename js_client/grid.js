@@ -1,6 +1,6 @@
 import { html, css, LitElement, unsafeCSS } from 'https://unpkg.com/lit-element/lit-element.js?module';
 import './infoBox.js'
-import {GridElement, GridLetter, GridBox, gridType} from './gridBoxes.js'
+import { GridElement, GridLetter, GridBox, gridType } from './gridBoxes.js'
 import './solutionBox.js'
 
 export class CrosswordGrid extends LitElement {
@@ -88,10 +88,11 @@ export class CrosswordGrid extends LitElement {
 
         this.solution_locations = json_grid.solution
 
-        if (this.solutionBox)
+        if (this.solutionBox) {
             this.solutionBox.length = this.solution_locations.length;
             this.solutionBox.requestUpdate();
             console.log("update box");
+        }
 
         var y;
         var x;
@@ -126,14 +127,19 @@ export class CrosswordGrid extends LitElement {
 
         this.requestUpdate();
 
-        
+
     }
 
-    focusNextCellHorizontal(x, y) {
+    focusNextCellHorizontal(x, y, skip_revealed = false) {
         if (x + 1 < this.width && this.grid[y][x + 1].getGridType() === gridType.LETTER) {
             if (this.grid[y][x].getGridType() === gridType.LETTER) {
-                this.grid[y][x].getGridLetter().blur();
+                //this.grid[y][x].getGridLetter().blur();
             }
+
+            if (skip_revealed && this.grid[y][x + 1].getGridLetter().revealed) {
+                return this.focusNextCellHorizontal(x + 1, y, true);
+            }
+
             this.grid[y][x + 1].getGridLetter().focus(x, y);
 
 
@@ -143,11 +149,16 @@ export class CrosswordGrid extends LitElement {
         return false;
     }
 
-    focusPrevCellHorizontal(x, y) {
+    focusPrevCellHorizontal(x, y, skip_revealed = false) {
         if (x - 1 >= 0 && this.grid[y][x - 1].getGridType() === gridType.LETTER) {
             if (this.grid[y][x].getGridType() === gridType.LETTER) {
-                this.grid[y][x].getGridLetter().blur();
+                //this.grid[y][x].getGridLetter().blur();
             }
+
+            if (skip_revealed && this.grid[y][x - 1].getGridLetter().revealed) {
+                return this.focusPrevCellHorizontal(x - 1, y, true);
+            }
+
             this.grid[y][x - 1].getGridLetter().focus();
 
 
@@ -157,10 +168,13 @@ export class CrosswordGrid extends LitElement {
         return false;
     }
 
-    focusNextCellVertical(x, y) {
+    focusNextCellVertical(x, y, skip_revealed = false) {
         if (y + 1 < this.height && this.grid[y + 1][x].getGridType() === gridType.LETTER) {
             if (this.grid[y][x].getGridType() === gridType.LETTER) {
-                this.grid[y][x].getGridLetter().blur();
+                //this.grid[y][x].getGridLetter().blur();
+            }
+            if (skip_revealed && this.grid[y + 1][x].getGridLetter().revealed) {
+                return this.focusNextCellVertical(x, y + 1, true);
             }
             this.grid[y + 1][x].getGridLetter().focus(x, y);
 
@@ -170,10 +184,13 @@ export class CrosswordGrid extends LitElement {
         return false;
     }
 
-    focusPrevCellVertical(x, y) {
+    focusPrevCellVertical(x, y, skip_revealed = false) {
         if (y - 1 >= 0 && this.grid[y - 1][x].getGridType() === gridType.LETTER) {
             if (this.grid[y][x].getGridType() === gridType.LETTER) {
-                this.grid[y][x].getGridLetter().blur();
+                //this.grid[y][x].getGridLetter().blur();
+            }
+            if (skip_revealed && this.grid[y - 1][x].getGridLetter().revealed) {
+                return this.focusPrevCellVertical(x, y - 1, true);
             }
             this.grid[y - 1][x].getGridLetter().focus();
 
@@ -186,18 +203,18 @@ export class CrosswordGrid extends LitElement {
 
     focusNextCell(x, y) {
         if (this.lastMoveVertical) {
-            if (this.focusNextCellVertical(x, y)) {
+            if (this.focusNextCellVertical(x, y, true)) {
                 return;
             }
-            if (this.focusNextCellHorizontal(x, y)) {
+            if (this.focusNextCellHorizontal(x, y, true)) {
                 this.lastMoveVertical = false;
             }
         }
         else {
-            if (this.focusNextCellHorizontal(x, y)) {
+            if (this.focusNextCellHorizontal(x, y, true)) {
                 return;
             }
-            if (this.focusNextCellVertical(x, y)) {
+            if (this.focusNextCellVertical(x, y, true)) {
                 this.lastMoveVertical = true;
             }
         }
@@ -209,18 +226,18 @@ export class CrosswordGrid extends LitElement {
             return;
         }
         if (this.lastMoveVertical) {
-            if (this.focusPrevCellVertical(x, y)) {
+            if (this.focusPrevCellVertical(x, y, true)) {
                 return;
             }
-            if (this.focusPrevCellHorizontal(x, y)) {
+            if (this.focusPrevCellHorizontal(x, y, true)) {
                 this.lastMoveVertical = false;
             }
         }
         else {
-            if (this.focusPrevCellHorizontal(x, y)) {
+            if (this.focusPrevCellHorizontal(x, y, true)) {
                 return;
             }
-            if (this.focusPrevCellVertical(x, y)) {
+            if (this.focusPrevCellVertical(x, y, true)) {
                 this.lastMoveVertical = true;
             }
         }
@@ -335,23 +352,33 @@ export class CrosswordGrid extends LitElement {
         this.serverConnection.sendMessage(msg)
     }
 
-    setSolutionLetter(solutionNumber, letter, revealed = false){
+    setSolutionLetter(solutionNumber, letter, revealed = false) {
         this.solutionBox.setLetter(solutionNumber, letter, revealed);
         const x = this.solution_locations[solutionNumber][1];
         const y = this.solution_locations[solutionNumber][0];
         console.log("update solution letter");
+        var old_val = this.grid[y][x].getGridLetter().value;
         this.grid[y][x].getGridLetter().value = letter;
+
+        if (old_val != letter && !revealed) {
+            this.sendMessage({
+                'type': 'update',
+                'x': x,
+                'y': y,
+                'letter': letter
+            });
+        }
 
     }
 
-    
+
 
     render() {
         this.num_hints = 0;
         console.log("refreshing grid");
 
         var solution_length = 0;
-        if (this.solution_locations){
+        if (this.solution_locations) {
             solution_length = this.solution_locations.length;
         }
 
