@@ -4,13 +4,13 @@ from . import crossword
 
 
 class Session(object):
-    def __init__(self, days_to_expire:int = 2) -> None:
+    def __init__(self, days_to_expire: int = 2) -> None:
         self.crossword = None
         self.datetime_created = dt.datetime.utcnow()
         self.connected_sockets = set()
         self.last_touched = self.datetime_created
         self.days_to_expire = 2
-    
+
     def cleanup(self):
         sockets_to_remove = []
         for socket in self.connected_sockets:
@@ -22,7 +22,7 @@ class Session(object):
 
     def connect_socket(self,
                        websocket: json_websockets.JsonWebsocketConnection) -> None:
-        
+
         self.cleanup()
         self.connected_sockets.add(websocket)
 
@@ -38,20 +38,21 @@ class Session(object):
     def get_datetime_created(self) -> dt.datetime:
         return self.datetime_created
 
-    def create_crossword(self, width: int = 20, height: int = 20, lang: str = "en"):
+    def create_crossword(self, width: int = 20, height: int = 20, lang: str = "en", difficulty: int = 0):
         self.crossword = crossword.Crossword(width=width,
                                              height=height,
-                                             lang_code=lang)
+                                             lang_code=lang,
+                                             difficulty=difficulty)
 
-    def get_crossword(self, lang: str = "en") -> crossword.Crossword:
+    def get_crossword(self, lang: str = "en", difficulty: int = 0) -> crossword.Crossword:
         if self.crossword is None:
-            self.create_crossword(lang = lang)
-        
+            self.create_crossword(lang=lang, difficulty=difficulty)
+
         return self.crossword
-    
+
     def touch(self):
         self.last_touched = dt.datetime.utcnow()
-    
+
     def is_expired(self):
         self.cleanup()
         if len(self.connected_sockets) > 0:
@@ -59,6 +60,5 @@ class Session(object):
         now = dt.datetime.utcnow()
         if (now - self.last_touched).days > self.days_to_expire:
             return True
-        
-        return False
 
+        return False

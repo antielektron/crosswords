@@ -6,6 +6,24 @@ import pathlib
 import logging
 
 
+def get_difficulty_threshold(lang: str, difficulty: int):
+    return get_difficulty_threshold.thresholds[lang][difficulty]
+
+
+get_difficulty_threshold.thresholds = {
+    'de': {
+        0: 12,
+        1: 6,
+        2: 0
+    },
+    'en': {
+        0: 200,
+        1: 100,
+        2: 10
+    }
+}
+
+
 def get_database(lang: str = "en") -> dict:
     if lang not in get_database._dbs:
         current_folder = pathlib.Path(__file__).parents[0]
@@ -116,8 +134,15 @@ class WordInfo(object):
         return self._is_vertical
 
 
-def create_word_grid(w: int, h: int, lang_code: str = "en", target_density=0.5):
-    logging.info("generate new crossword")
+def create_word_grid(w: int, h: int, lang_code: str = "en", target_density: float = 0.5, difficulty: int = 0):
+    logging.info("generate new crossword with params: w:%s h:%s lang:%s density:%s difficulty:%s",
+                 str(w),
+                 str(h),
+                 lang_code,
+                 str(target_density),
+                 str(difficulty))
+
+    t_num_translations = get_difficulty_threshold(lang = lang_code, difficulty = difficulty)
 
     database = get_database(lang=lang_code)
     list_words = list(database.keys())
@@ -145,9 +170,13 @@ def create_word_grid(w: int, h: int, lang_code: str = "en", target_density=0.5):
         index = random.randint(0, n_words-1)
         word = list_words[index][:]
 
-        while len(word) >= max_length or not word.isalnum() or len(word) <= min_length:
+        num_translations = database[word]['num_translations']
+        t = t_num_translations
+
+        while len(word) >= max_length or not word.isalnum() or len(word) <= min_length or num_translations < t:
             index = random.randint(0, n_words-1)
             word = list_words[index][:]
+            num_translations = database[word]['num_translations']
 
         return word
 

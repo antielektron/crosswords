@@ -2,6 +2,7 @@ import enum
 import json
 import logging
 import numpy as np
+from numpy.lib.function_base import diff
 
 from . import crossword_generator
 
@@ -105,10 +106,11 @@ class LetterField(Field):
 
 
 class Grid(object):
-    def __init__(self, width: int, height: int, lang_code: str, density=0.55):
+    def __init__(self, width: int, height: int, lang_code: str, density=0.55, difficulty: int = 0):
         self._width = width
         self._height = height
         self._lang_code = lang_code
+        self._difficulty = difficulty
         self._density = density
         self._grid = []
         self._solution_locations = None
@@ -213,10 +215,11 @@ class Grid(object):
         return status_update
 
     def check_and_reveal_word(self, x: int, y: int):
-        grid_update = self.check_and_reveal_horizontal(x, y) + self.check_and_reveal_vertical(x, y)
+        grid_update = self.check_and_reveal_horizontal(
+            x, y) + self.check_and_reveal_vertical(x, y)
 
         # check also the solution locations
-        
+
         is_solution_cell = False
         for location in self._solution_locations:
             ly = location[0]
@@ -228,10 +231,10 @@ class Grid(object):
             if cell.get_user_content() != cell.get_content():
                 # not solved, nothing to do, return only grid update
                 return grid_update
-        
+
         if not is_solution_cell:
             return grid_update
-        
+
         solution_updates = []
         for location in self._solution_locations:
             ly = location[0]
@@ -267,7 +270,7 @@ class Grid(object):
 
         cell.user_input(letter.lower())
 
-        revealed_changes = self.check_and_reveal_word(x,y)
+        revealed_changes = self.check_and_reveal_word(x, y)
 
         if len(revealed_changes) == 0:
             return [{
@@ -282,8 +285,11 @@ class Grid(object):
         return self._solution_locations
 
     def _build_grid(self):
-        raw_grid, word_infos, solution_locations = crossword_generator.create_word_grid(
-            self._width - 1, self._height - 1, lang_code=self._lang_code, target_density=self._density)
+        raw_grid, word_infos, solution_locations = crossword_generator.create_word_grid(self._width - 1,
+                                                                                        self._height - 1,
+                                                                                        lang_code=self._lang_code,
+                                                                                        target_density=self._density,
+                                                                                        difficulty=self._difficulty)
 
         self._solution_locations = solution_locations
         # fix solution locations offsets
@@ -334,10 +340,11 @@ class Grid(object):
 
 
 class Crossword(object):
-    def __init__(self, width: int, height: int, lang_code: str = "en"):
+    def __init__(self, width: int, height: int, lang_code: str = "en", difficulty: int = 0):
         self._width = width
         self._height = height
-        self._grid = Grid(width, height, lang_code)
+        self._difficulty = difficulty
+        self._grid = Grid(width, height, lang_code, difficulty=difficulty)
 
     def serialize(self):
         return {
